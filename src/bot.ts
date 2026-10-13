@@ -19,7 +19,11 @@ export const COMMANDS = [
 ];
 
 function errorText(err: unknown): string {
-  if (err instanceof SolamiError && (err.status === 401 || err.status === 403)) return "Solami rejected the API key.";
+  if (err instanceof SolamiError && (err.status === 401 || err.status === 403)) {
+    console.error("[solami]", err.message);
+    const reason = err.body.replace(/\s+/g, " ").trim().slice(0, 160);
+    return `Solami rejected the API key (${err.status}${reason ? `: ${reason}` : ""}). It needs the DataApi permission on a plan with Blur access.`;
+  }
   const msg = (err as Error).message ?? "";
   if (msg.includes("getTokenSupply")) return "That address is not a token mint.";
   return "Could not read that token right now. Try again in a few seconds.";

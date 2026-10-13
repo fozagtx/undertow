@@ -59,7 +59,7 @@ export interface Creation {
 }
 
 export class SolamiError extends Error {
-  constructor(public status: number, path: string, body: string) {
+  constructor(public status: number, path: string, public body: string) {
     super(`Solami ${path} ${status}: ${body.slice(0, 200)}`);
   }
 }
