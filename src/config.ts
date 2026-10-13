@@ -36,7 +36,6 @@ export function requireEnv(): void {
   const missing = [
     ["SOLAMI_API_KEY", env.solamiKey],
     ["TELEGRAM_BOT_TOKEN", env.telegramToken],
-    ["DATABASE_URL", env.databaseUrl],
   ].filter(([, v]) => !v).map(([k]) => k);
   if (missing.length) {
     console.error(`Missing env: ${missing.join(", ")}. See README.`);

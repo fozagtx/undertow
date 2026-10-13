@@ -7,7 +7,7 @@ import { startJobs } from "./src/jobs.ts";
 import { metrics } from "./src/metrics.ts";
 import { enqueueLaunch, setReportHandler } from "./src/pipeline.ts";
 import { startServer } from "./src/server.ts";
-import { feed, initStore, watches } from "./src/store.ts";
+import { feed, initStore, storage, watches } from "./src/store.ts";
 import { BlurStream, type Swap, type TokenCreate } from "./src/stream.ts";
 import { onSell, setWatchChangeHandler, watchReport } from "./src/watch.ts";
 
@@ -52,6 +52,7 @@ setWatchChangeHandler(() => {
 });
 
 await initStore();
+console.log(`[store] ${storage}`);
 const server = startServer();
 console.log(`[server] http://localhost:${server.port}`);
 launches.start();

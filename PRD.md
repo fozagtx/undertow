@@ -43,7 +43,7 @@ Retail Solana memecoin traders who buy launchpad tokens in the first minutes thr
 Launches seen, analysed, flagged per band, dump alerts sent, active watches, stream connected and last event age, Jito lookup hit rate.
 
 ## Stack
-Bun + TypeScript, one flat repo. grammy (Telegram), node-cron, zod, Postgres via `Bun.sql`. `Bun.serve` for `/health` and `/metrics`. URLs in `src/config.ts`; env only for `SOLAMI_API_KEY`, `TELEGRAM_BOT_TOKEN`, `DATABASE_URL`.
+Bun + TypeScript, one flat repo. grammy (Telegram), node-cron, zod, `Bun.sql` on Postgres when `DATABASE_URL` is set, local SQLite otherwise. `Bun.serve` for `/health` and `/metrics`. URLs in `src/config.ts`; env only for `SOLAMI_API_KEY`, `TELEGRAM_BOT_TOKEN`.
 
 ## Bounty fit (Superteam MY x Solami)
 Runs live on mainnet; uses Solami RPC, Blur WebSocket and Blur Data API as the core; public repo; README explains plugging in your own Solami key; metrics shown.
