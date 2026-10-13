@@ -101,7 +101,7 @@ export async function analyzeMint(mint: string, hint?: { symbol?: string; name?:
         funded: top.funded,
         of: cluster!.requested,
         sameSlotFunded: top.same_slot_funded,
-        priorMints: funders.priorMints(top.funder, mint),
+        priorMints: await funders.priorMints(top.funder, mint),
       };
     }
   }
@@ -118,7 +118,7 @@ export async function analyzeMint(mint: string, hint?: { symbol?: string; name?:
   const result = bundleScore(features);
 
   if (topFunder && result.band === "BUNDLED" && topFunder.funded >= MODEL.minClusterSize) {
-    funders.record(topFunder.funder, mint, result.score);
+    await funders.record(topFunder.funder, mint, result.score);
   }
 
   const flagged = new Set<string>([...bundledWallets, ...early.map((b) => b.wallet)]);

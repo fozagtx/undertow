@@ -34,7 +34,7 @@ Commands: `/check <address>`, `/feed on|off`, `/watching`, `/unwatch <address>`,
 Solami's `intel` labels a wallet a bundler when it bought in the exact creation slot. Undertow adds the Jito bundle check, so a bundled buy one or two slots later is caught and a same-slot buy that was not bundled is not counted.
 
 ## Run it
-Needs [Bun](https://bun.sh) 1.2+.
+Needs [Bun](https://bun.sh) 1.2+ and a Postgres database.
 
 1. Get a Solami API key with the `DataApi` permission at [solami.dev](https://solami.dev) (Dev plan or higher; Free has no WebSocket).
 2. Create a bot with [@BotFather](https://t.me/BotFather). For paste-to-read in groups, turn privacy off with `/setprivacy`; `/check` works either way.
@@ -42,7 +42,7 @@ Needs [Bun](https://bun.sh) 1.2+.
 
 ```sh
 bun install
-cp .env.example .env   # fill in both values
+cp .env.example .env   # fill in all three values
 bun start
 ```
 
@@ -50,8 +50,15 @@ bun start
 |---|---|
 | `SOLAMI_API_KEY` | Your Solami key. Used for Blur WebSocket, Blur Data API and RPC. |
 | `TELEGRAM_BOT_TOKEN` | Your bot token. |
+| `DATABASE_URL` | Postgres connection string. Feed chats, watches, verdicts and funder memory live here. |
 | `PORT` | Optional, default 3000. |
-| `DB_PATH` | Optional SQLite path, default `undertow.sqlite`. |
+
+## Deploy on Render
+1. In Render, New > Blueprint, pick this repo. `render.yaml` creates the `undertow` web service and a free `undertow-db` Postgres, and wires `DATABASE_URL`.
+2. Fill in `SOLAMI_API_KEY` and `TELEGRAM_BOT_TOKEN` when Render asks.
+3. Open the service URL for the metrics page. A cron pings its own `/health` every 10 minutes so the free instance stays awake and the bot keeps polling.
+
+Run one instance per bot token; Telegram allows a single poller.
 
 Endpoints and tuning (early-slot window, queue size, thresholds) live in `src/config.ts`.
 

@@ -14,10 +14,10 @@ function crossed(soldPct: number): number {
   return DETECTOR.dumpThresholds.filter((t) => soldPct >= t).pop() ?? 0;
 }
 
-export function watchReport(chatId: string, r: Report, hours: number): boolean {
+export async function watchReport(chatId: string, r: Report, hours: number): Promise<boolean> {
   if (!r.flaggedWallets.length) return false;
-  const isNew = !watches.forMint(r.mint).length;
-  watches.upsert({
+  const isNew = !(await watches.forMint(r.mint)).length;
+  await watches.upsert({
     chat_id: chatId,
     mint: r.mint,
     symbol: r.symbol,
@@ -26,7 +26,7 @@ export function watchReport(chatId: string, r: Report, hours: number): boolean {
     expires_at: Date.now() + hours * 3_600_000,
   });
   const already = crossed(r.insiderSoldPct);
-  if (already) watches.setAlerted(chatId, r.mint, already);
+  if (already) await watches.setAlerted(chatId, r.mint, already);
   if (isNew) onChange();
   return true;
 }
@@ -34,7 +34,7 @@ export function watchReport(chatId: string, r: Report, hours: number): boolean {
 const lastCheck = new Map<string, number>();
 
 export async function checkMint(api: Api, mint: string): Promise<void> {
-  const list = watches.forMint(mint);
+  const list = await watches.forMint(mint);
   if (!list.length) return;
   lastCheck.set(mint, Date.now());
   const wallets = [...new Set(list.flatMap((w) => w.wallets))];
@@ -42,7 +42,7 @@ export async function checkMint(api: Api, mint: string): Promise<void> {
   const level = crossed(pos.soldPct);
   for (const w of list) {
     if (level <= w.last_alert_pct) continue;
-    watches.setAlerted(w.chat_id, mint, level);
+    await watches.setAlerted(w.chat_id, mint, level);
     try {
       await api.sendMessage(w.chat_id, formatDump(w.symbol, mint, pos.soldPct, pos.sellers, wallets.length), {
         parse_mode: "HTML",
@@ -53,7 +53,7 @@ export async function checkMint(api: Api, mint: string): Promise<void> {
       console.error("[watch] send", (err as Error).message);
     }
   }
-  if (level) dumps.record(mint, Math.round(pos.soldPct));
+  if (level) await dumps.record(mint, Math.round(pos.soldPct));
 }
 
 const pending = new Map<string, Timer>();
@@ -71,7 +71,7 @@ export function onSell(api: Api, mint: string): void {
 
 export async function sweep(api: Api): Promise<void> {
   const before = watches.mints().length;
-  watches.purge();
+  await watches.purge();
   for (const mint of watches.mints()) {
     try {
       await checkMint(api, mint);

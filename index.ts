@@ -7,7 +7,7 @@ import { startJobs } from "./src/jobs.ts";
 import { metrics } from "./src/metrics.ts";
 import { enqueueLaunch, setReportHandler } from "./src/pipeline.ts";
 import { startServer } from "./src/server.ts";
-import { feed, watches } from "./src/store.ts";
+import { feed, initStore, watches } from "./src/store.ts";
 import { BlurStream, type Swap, type TokenCreate } from "./src/stream.ts";
 import { onSell, setWatchChangeHandler, watchReport } from "./src/watch.ts";
 
@@ -20,8 +20,8 @@ const bot = createBot();
 
 setReportHandler(async (r) => {
   if (r.result.band !== "BUNDLED") return;
-  for (const chat of feed.list()) {
-    watchReport(chat, r, DETECTOR.feedWatchHours);
+  for (const chat of await feed.list()) {
+    await watchReport(chat, r, DETECTOR.feedWatchHours);
     await bot.api
       .sendMessage(chat, formatReport(r), { parse_mode: "HTML", link_preview_options: { is_disabled: true } })
       .then(() => metrics.feedAlerts++)
@@ -51,10 +51,14 @@ setWatchChangeHandler(() => {
   }, 2_000);
 });
 
+await initStore();
 const server = startServer();
 console.log(`[server] http://localhost:${server.port}`);
 launches.start();
 watched.start();
 startJobs(bot.api);
-await bot.api.setMyCommands(COMMANDS);
+await bot.api.setMyCommands(COMMANDS).catch((err) => {
+  console.error(`[bot] Telegram rejected TELEGRAM_BOT_TOKEN: ${err.description ?? err.message}`);
+  process.exit(1);
+});
 bot.start({ onStart: (me) => console.log(`[bot] @${me.username} polling`) });

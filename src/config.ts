@@ -29,13 +29,14 @@ export const env = {
   solamiKey: process.env.SOLAMI_API_KEY ?? "",
   telegramToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
   port: Number(process.env.PORT ?? 3000),
-  dbPath: process.env.DB_PATH ?? "undertow.sqlite",
+  databaseUrl: process.env.DATABASE_URL ?? "",
 };
 
 export function requireEnv(): void {
   const missing = [
     ["SOLAMI_API_KEY", env.solamiKey],
     ["TELEGRAM_BOT_TOKEN", env.telegramToken],
+    ["DATABASE_URL", env.databaseUrl],
   ].filter(([, v]) => !v).map(([k]) => k);
   if (missing.length) {
     console.error(`Missing env: ${missing.join(", ")}. See README.`);

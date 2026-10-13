@@ -8,10 +8,10 @@ let sweeping = false;
 
 async function digest(api: Api): Promise<void> {
   const since = Date.now() - 86_400_000;
-  const all = verdicts.since(since);
+  const all = await verdicts.since(since);
   const bundled = all.filter((v) => v.band === "BUNDLED");
-  const dumped = new Map(dumps.since(since).map((d) => [d.mint, d.sold_pct]));
-  const repeat = funders.repeat(since);
+  const dumped = new Map((await dumps.since(since)).map((d) => [d.mint, d.sold_pct]));
+  const repeat = await funders.repeat(since);
   const lines = [
     `<b>Undertow, last 24h</b>`,
     `${all.length} launches read, ${bundled.length} BUNDLED, ${dumped.size} dumped after the read.`,
@@ -19,7 +19,7 @@ async function digest(api: Api): Promise<void> {
     ...bundled.slice(0, 5).map((v) => `${v.score}  ${tokenLabel(v.symbol, v.mint)} <code>${v.mint}</code>${dumped.has(v.mint) ? `  sold ${dumped.get(v.mint)}%` : ""}`),
   ];
   if (repeat.length) lines.push("", "<b>Repeat funders</b>", ...repeat.map((r) => `<code>${r.funder}</code> ${r.launches} launches`));
-  for (const chat of feed.list()) {
+  for (const chat of await feed.list()) {
     await api.sendMessage(chat, lines.join("\n"), { parse_mode: "HTML" }).catch((err) => console.error("[digest]", err.message));
   }
 }
@@ -34,5 +34,7 @@ export function startJobs(api: Api): void {
       sweeping = false;
     }
   });
+  const self = process.env.RENDER_EXTERNAL_URL;
+  if (self) cron.schedule("*/10 * * * *", () => void fetch(`${self}/health`).catch(() => {}));
   cron.schedule("0 12 * * *", () => digest(api).catch((err) => console.error("[digest]", err.message)), { timezone: "UTC" });
 }

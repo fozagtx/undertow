@@ -13,8 +13,8 @@ export function setReportHandler(fn: OnReport) {
   onReport = fn;
 }
 
-export function saveReport(r: Report) {
-  verdicts.save(r.mint, r.symbol, r.result.score, r.result.band, r);
+export async function saveReport(r: Report) {
+  await verdicts.save(r.mint, r.symbol, r.result.score, r.result.band, r);
 }
 
 export function enqueueLaunch(e: TokenCreate): void {
@@ -36,7 +36,7 @@ function drain(): void {
     running++;
     analyzeMint(e.mint, { symbol: e.symbol, name: e.name, creator: e.creator, slot: e.slot, signature: e.signature })
       .then(async (r) => {
-        saveReport(r);
+        await saveReport(r);
         await onReport(r);
       })
       .catch((err) => {

@@ -30,8 +30,8 @@ async function check(ctx: Context, mint: string): Promise<void> {
   const pending = await ctx.reply(`Reading <code>${mint}</code>...`, { parse_mode: "HTML" });
   try {
     const r = await analyzeMint(mint);
-    saveReport(r);
-    const watching = watchReport(String(ctx.chat!.id), r, DETECTOR.watchHours);
+    await saveReport(r);
+    const watching = await watchReport(String(ctx.chat!.id), r, DETECTOR.watchHours);
     const text = formatReport(r) + (watching ? `\n\nWatching ${r.flaggedWallets.length} early wallets for ${DETECTOR.watchHours}h.` : "");
     await ctx.api.editMessageText(ctx.chat!.id, pending.message_id, text, { parse_mode: "HTML", link_preview_options: { is_disabled: true } });
   } catch (err) {
@@ -55,18 +55,18 @@ export function createBot(): Bot {
     const id = String(ctx.chat.id);
     const arg = ctx.match.trim().toLowerCase();
     if (arg === "off") {
-      feed.remove(id);
+      await feed.remove(id);
       return void (await ctx.reply("Feed off."));
     }
-    if (arg === "on" || !feed.has(id)) {
-      feed.add(id);
+    if (arg === "on" || !(await feed.has(id))) {
+      await feed.add(id);
       return void (await ctx.reply("Feed on. Every new pump.fun launch that scores BUNDLED lands here, and its early wallets get watched."));
     }
     await ctx.reply("Feed is on. /feed off to stop.");
   });
 
   bot.command("watching", async (ctx) => {
-    const list = watches.forChat(String(ctx.chat.id));
+    const list = await watches.forChat(String(ctx.chat.id));
     if (!list.length) return void (await ctx.reply("Not watching anything. Paste a token address."));
     const lines = list.map((w) => `${tokenLabel(w.symbol, w.mint)} <code>${w.mint}</code> until ${new Date(w.expires_at).toISOString().slice(11, 16)} UTC`);
     await ctx.reply(lines.join("\n"), { parse_mode: "HTML" });
@@ -75,7 +75,7 @@ export function createBot(): Bot {
   bot.command("unwatch", async (ctx) => {
     const mint = ctx.match.match(MINT_RE)?.[0];
     if (!mint) return void (await ctx.reply("Send /unwatch followed by a token address."));
-    watches.remove(String(ctx.chat.id), mint);
+    await watches.remove(String(ctx.chat.id), mint);
     await ctx.reply("Stopped watching.");
   });
 
