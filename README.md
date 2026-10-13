@@ -54,8 +54,8 @@ bun start
 | `PORT` | Optional, default 3000. |
 
 ## Deploy on Render
-1. In Render, New > Blueprint, pick this repo. `render.yaml` creates the `undertow` web service and a free `undertow-db` Postgres, and wires `DATABASE_URL`.
-2. Fill in `SOLAMI_API_KEY` and `TELEGRAM_BOT_TOKEN` when Render asks.
+1. In Render, New > Blueprint, pick this repo. `render.yaml` creates the `undertow` web service.
+2. Fill in `SOLAMI_API_KEY`, `TELEGRAM_BOT_TOKEN` and `DATABASE_URL` when Render asks. `DATABASE_URL` can be the Internal Database URL of a Render Postgres you already have (the free plan allows one); Undertow keeps its tables in its own `undertow` schema.
 3. Open the service URL for the metrics page. A cron pings its own `/health` every 10 minutes so the free instance stays awake and the bot keeps polling.
 
 Run one instance per bot token; Telegram allows a single poller.

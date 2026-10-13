@@ -15,11 +15,4 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: DATABASE_URL
-        fromDatabase:
-          name: undertow-db
-          property: connectionString
-
-databases:
-  - name: undertow-db
-    plan: free
-    region: oregon
+        sync: false
