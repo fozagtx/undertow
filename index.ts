@@ -1,5 +1,4 @@
-import { DETECTOR, requireEnv } from "./src/config.ts";
-requireEnv();
+import { DETECTOR, env, missingEnv } from "./src/config.ts";
 
 import { createBot, COMMANDS } from "./src/bot.ts";
 import { formatReport } from "./src/format.ts";
@@ -10,6 +9,14 @@ import { startServer } from "./src/server.ts";
 import { feed, initStore, storage, watches } from "./src/store.ts";
 import { BlurStream, type Swap, type TokenCreate } from "./src/stream.ts";
 import { onSell, setWatchChangeHandler, watchReport } from "./src/watch.ts";
+
+const config = missingEnv();
+if (config.missing.length) {
+  const msg = `Missing env${config.service ? ` on Render service "${config.service}"` : ""}: ${config.missing.join(", ")}. Env vars with similar names: ${config.seen.join(", ") || "none"}.`;
+  console.error(msg);
+  Bun.serve({ port: env.port, fetch: () => Response.json({ ok: false, error: msg, ...config }) });
+  await new Promise(() => {});
+}
 
 process.on("unhandledRejection", (err: any) => {
   if (err?.error_code === 409) return console.log("[bot] 409 conflict, another instance is polling");
