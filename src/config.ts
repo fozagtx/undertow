@@ -25,11 +25,16 @@ export const DETECTOR = {
   dumpThresholds: [25, 50, 75],
 };
 
+function readEnv(name: string): string {
+  const key = Object.keys(process.env).find((k) => k.trim().toUpperCase() === name);
+  return (key ? process.env[key] ?? "" : "").trim();
+}
+
 export const env = {
-  solamiKey: process.env.SOLAMI_API_KEY ?? "",
-  telegramToken: process.env.TELEGRAM_BOT_TOKEN ?? "",
+  solamiKey: readEnv("SOLAMI_API_KEY"),
+  telegramToken: readEnv("TELEGRAM_BOT_TOKEN"),
   port: Number(process.env.PORT ?? 3000),
-  databaseUrl: process.env.DATABASE_URL ?? "",
+  databaseUrl: readEnv("DATABASE_URL"),
 };
 
 export function requireEnv(): void {
@@ -38,7 +43,12 @@ export function requireEnv(): void {
     ["TELEGRAM_BOT_TOKEN", env.telegramToken],
   ].filter(([, v]) => !v).map(([k]) => k);
   if (missing.length) {
-    console.error(`Missing env: ${missing.join(", ")}. See README.`);
+    const related = Object.keys(process.env).filter((k) => /SOLAMI|TELEGRAM|BOT|TOKEN|API_KEY/i.test(k));
+    const service = process.env.RENDER_SERVICE_NAME ? ` on Render service "${process.env.RENDER_SERVICE_NAME}"` : "";
+    console.error(`Missing env${service}: ${missing.join(", ")}. See README.`);
+    console.error(related.length
+      ? `Env vars present with similar names: ${related.map((k) => JSON.stringify(k)).join(", ")} (empty values count as missing)`
+      : "No similar env vars are present. On Render, set them on this service's Environment tab and use Save, rebuild, and deploy.");
     process.exit(1);
   }
 }
